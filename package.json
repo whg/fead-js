@@ -1,0 +1,40 @@
+{
+  "name": "fead",
+  "version": "0.1.0",
+  "description": "A libraries to use with fead devices",
+  "main": "index.js",
+  "type": "module",
+  "repository": "https://github.com/whg/fead-js",
+  "author": "Will Gallia <will@stillatplay.com>",
+  "license": "MIT",
+  "private": true,
+  "files": ["lib"],
+  "main": "lib/fead.js",
+  "types": "lib/fead.d.ts",
+  "devDependencies": {
+    "@types/jest": "^24.0.23",
+    "@typescript-eslint/eslint-plugin": "^2.7.0",
+    "@typescript-eslint/parser": "^2.7.0",
+    "eslint": "^6.6.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jest": "^23.0.4",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "jest": "^24.9.0",
+    "ts-jest": "^24.1.0",
+    "tsc-watch": "^4.0.0",
+    "typescript": "^3.7.2",
+    "@types/node": "^12.12.8",
+    "@types/serialport": "^7.0.4"
+  },
+  "dependencies": {
+    "serialport": "^8.0.5"
+  },
+  "scripts": {
+    "dev": "tsc-watch --noClear",
+    "start": "node ./dist/index.js",
+    "test": "jest --verbose"
+  }
+}
