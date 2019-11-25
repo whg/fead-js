@@ -36,15 +36,15 @@ export type Response = {
 }
 
 export type Slave = {
-  uid: number,
-  address: number
+  uid: number;
+  address: number;
 }
 
 const eventEmitter = new EventEmitter()
 eventEmitter.setMaxListeners(Infinity)
 const requestQueue: Request[] = []
 
-export function begin(device: { path: string, baudRate: number }): Promise<void> {
+export function begin(device: { path: string; baudRate: number }): Promise<void> {
   return serial.open(device)
 }
 
@@ -131,4 +131,19 @@ export function get(address: number, param: param): Promise<Response> {
 
 export function set(address: number, param: param, value: number, extraValue?: number): Promise<Response> {
   return request({ method: Method.SET, address, param, value, extraValue })
+}
+
+export function * availableAddresses(): IterableIterator<number> {
+  for (let i = 1; i < 250; i++) yield i 
+}
+
+export async function findOnline(): Promise<Slave[]> {
+  const output: Slave[] = []
+  for (const address of availableAddresses()) {
+    try {
+      const response = await get(address, Param.UID)
+      output.push({ uid: response.value, address })
+    } catch (e) {}
+  }
+  return output
 }
