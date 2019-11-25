@@ -8,19 +8,21 @@ const MAX_REQUEST_ATTEMPTS = 2
 const REQUEST_TIME_SPACE = 2
 
 export type packet = string
+export type param = number
+
+export const Param = {
+  ADDRESS: 254,
+  UID: 255
+}
+
 export const enum Method {
   GET = 'g',
   SET = 's'
 }
 
-export enum Param {
-  ADDRESS = 254,
-  UID = 255
-}
-
 export type Request = {
   method: Method;
-  param: Param;
+  param: param;
   address: number;
   value?: number;
   extraValue?: number;
@@ -28,7 +30,7 @@ export type Request = {
 
 export type Response = {
   address: number;
-  param: Param;
+  param: param;
   value: number;
   extraValue?: number;
 }
@@ -123,10 +125,10 @@ async function request(req: Request): Promise<Response> {
   throw new Error('no response')
 }
 
-export function get(address: number, param: Param): Promise<Response> {
+export function get(address: number, param: param): Promise<Response> {
   return request({ method: Method.GET, address, param })
 }
 
-export function set(address: number, param: Param, value: number, extraValue?: number): Promise<Response> {
+export function set(address: number, param: param, value: number, extraValue?: number): Promise<Response> {
   return request({ method: Method.SET, address, param, value, extraValue })
 }
