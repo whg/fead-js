@@ -78,7 +78,7 @@ export function construct(request: Request): packet {
   return output + '\n'
 }
 
-function process(response: packet): Response {
+export function unpack(response: packet): Response {
   const [address, param, ...values] = response
     .substr(1)
     .split(SEPARATOR)
@@ -103,7 +103,7 @@ function send(req: Request): Promise<Response> {
     const timeout = setTimeout(reject, RECEIVE_TIMEOUT)
     serial.setReceivedCallback((packet: packet) => {
       clearTimeout(timeout)
-      resolve(process(packet))
+      resolve(unpack(packet))
     })
   })
 }
@@ -143,8 +143,8 @@ async function request(req: Request): Promise<Response> {
   throw new Error('no response')
 }
 
-export function get(address: number, param: param): Promise<Response> {
-  return request({ method: Method.GET, address, param })
+export function get(address: number, param: param, extraValue?: number): Promise<Response> {
+  return request({ method: Method.GET, address, param, extraValue })
 }
 
 export function set(address: number, param: param, value: number, extraValue?: number): Promise<Response> {
@@ -152,6 +152,7 @@ export function set(address: number, param: param, value: number, extraValue?: n
 }
 
 export function * availableAddresses(): IterableIterator<number> {
+  for (let i = 1; i < 20; i++) yield i 
   for (let i = 100; i < 110; i++) yield i 
 }
 
