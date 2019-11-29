@@ -3,8 +3,9 @@ const Readline = require('@serialport/parser-readline')
 
 let port: SerialPort
 let parser
-type receiverFunc = (line: string) => void
-let receiver: receiverFunc | null = null
+type receiverFunc = ((line: string) => void) | null
+let receiver: receiverFunc = null
+let unsolicitedReceiver: receiverFunc = null
 
 export async function open(device: { path: string, baudRate: number }): Promise<void> {
   const { path, baudRate } = device
@@ -18,8 +19,12 @@ export async function open(device: { path: string, baudRate: number }): Promise<
         parser = new Readline()
         port.pipe(parser)
         parser.on('data', (line: string) => {
-          receiver && receiver(line)
-          receiver = null
+          if(receiver) {
+            receiver(line)
+            receiver = null
+          } else if (unsolicitedReceiver) {
+            unsolicitedReceiver(line)
+          }
         })
         resolve()
       }
@@ -33,4 +38,8 @@ export function write(data: string): void {
 
 export function setReceivedCallback(f: receiverFunc): void {
   receiver = f
+}
+
+export function setUnsolicitedReceiverCallback(f: receiverFunc): void {
+  unsolicitedReceiver = f
 }
