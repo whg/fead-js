@@ -1,10 +1,10 @@
 import EventEmitter from 'events'
 import * as serial from './serial'
+import { Slave } from './Slave'
 
 const SEPARATOR = ':'
 
-const RECEIVE_TIMEOUT = 12
-const REQUEST_TIME_SPACE = 2
+const broadcastAddress = 0
 
 export type packet = string
 export type param = number
@@ -22,7 +22,7 @@ export const enum Method {
 export type Request = {
   method: Method;
   param: param;
-  address: number;
+  address?: number;
   value?: number;
   extraValue?: number;
 }
@@ -73,26 +73,30 @@ export function unpack(response: packet): Response {
   return output
 }
 
-function _send(req: Request): Promise<Response> {
+export function write(req: Request): void {
+  serial.write(construct(req))
+}
+
+export function writeAndWait(req: Request, timeout = 12): Promise<Response> {
   return new Promise((resolve: (r: Response) => void, reject: () => void) => {
-    serial.write(construct(req))
-    const timeout = setTimeout(reject, RECEIVE_TIMEOUT)
+    write(req)
+    const _timeout = setTimeout(reject, timeout)
     serial.setReceivedCallback((packet: packet) => {
-      clearTimeout(timeout)
+      clearTimeout(_timeout)
       resolve(unpack(packet))
     })
   })
 }
 
-function requestComplete(): Promise<void> {
+function requestComplete(nextRequestDelay = 2): Promise<void> {
   return new Promise((resolve: () => void) => {
     eventEmitter.once('response', () => {
-      setTimeout(resolve, REQUEST_TIME_SPACE)
+      setTimeout(resolve, nextRequestDelay)
     })
   })
 }
 
-async function send(request: Request, maxAttempts = 2): Promise<Response> {
+export async function send(request: Request, maxAttempts = 2, timeout = 12): Promise<Response> {
   requestQueue.push(request)
 
   while (requestQueue[0] !== request) {
@@ -107,7 +111,7 @@ async function send(request: Request, maxAttempts = 2): Promise<Response> {
   let attempts = 0
   while (attempts < maxAttempts) {
     try {
-      const response = await _send(request)
+      const response = await writeAndWait(request, timeout)
       finish()
       return response
     } catch (e) {
@@ -125,6 +129,14 @@ export function get(address: number, param: param, extraValue?: number): Promise
 
 export function set(address: number, param: param, value: number, extraValue?: number): Promise<Response> {
   return send({ method: Method.SET, address, param, value, extraValue })
+}
+
+export function broadcast(req: Request, callback: (res: Response) => void): void {
+  req.address = broadcastAddress
+  serial.setUnsolicitedReceiverCallback((line: packet) => {
+    callback(unpack(line))
+  })
+  write(req)
 }
 
 export function * availableAddresses(): IterableIterator<number> {
