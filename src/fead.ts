@@ -34,27 +34,6 @@ export type Response = {
   extraValue?: number;
 }
 
-export class Slave {
-  constructor(public address: number, public uid?: number) {}
-
-  isOnline(): Promise<boolean> {
-    return new Promise((resolve) => {
-      if (online(this)) {
-        resolve(true)
-      } else {
-        get(this.address, Param.UID)
-          .then((response) => {
-            this.uid = response.value
-            resolve(true)
-          })
-          .catch(() => resolve(false))
-      }
-    })
-  }
-}
-
-export const online = (slave: Slave) => slave.uid !== undefined
-
 const eventEmitter = new EventEmitter()
 eventEmitter.setMaxListeners(Infinity)
 const requestQueue: Request[] = []
