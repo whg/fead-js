@@ -4,7 +4,6 @@ import * as serial from './serial'
 const SEPARATOR = ':'
 
 const RECEIVE_TIMEOUT = 12
-const MAX_REQUEST_ATTEMPTS = 2
 const REQUEST_TIME_SPACE = 2
 
 export type packet = string
@@ -35,7 +34,6 @@ export type Response = {
   extraValue?: number;
 }
 
-
 export class Slave {
   constructor(public address: number, public uid?: number) {}
 
@@ -44,7 +42,6 @@ export class Slave {
       if (online(this)) {
         resolve(true)
       } else {
-        
         get(this.address, Param.UID)
           .then((response) => {
             this.uid = response.value
@@ -97,7 +94,7 @@ export function unpack(response: packet): Response {
   return output
 }
 
-function send(req: Request): Promise<Response> {
+function _send(req: Request): Promise<Response> {
   return new Promise((resolve: (r: Response) => void, reject: () => void) => {
     serial.write(construct(req))
     const timeout = setTimeout(reject, RECEIVE_TIMEOUT)
@@ -116,22 +113,22 @@ function requestComplete(): Promise<void> {
   })
 }
 
-async function request(req: Request): Promise<Response> {
-  requestQueue.push(req)
+async function send(request: Request, maxAttempts = 2): Promise<Response> {
+  requestQueue.push(request)
 
-  while (requestQueue[0] !== req) {
+  while (requestQueue[0] !== request) {
     await requestComplete()
   }
 
   const finish = (): void => {
     requestQueue.shift()
-    eventEmitter.emit('response', req)
+    eventEmitter.emit('response', request)
   }
 
   let attempts = 0
-  while (attempts < MAX_REQUEST_ATTEMPTS) {
+  while (attempts < maxAttempts) {
     try {
-      const response = await send(req)
+      const response = await _send(request)
       finish()
       return response
     } catch (e) {
@@ -144,16 +141,16 @@ async function request(req: Request): Promise<Response> {
 }
 
 export function get(address: number, param: param, extraValue?: number): Promise<Response> {
-  return request({ method: Method.GET, address, param, extraValue })
+  return send({ method: Method.GET, address, param, extraValue })
 }
 
 export function set(address: number, param: param, value: number, extraValue?: number): Promise<Response> {
-  return request({ method: Method.SET, address, param, value, extraValue })
+  return send({ method: Method.SET, address, param, value, extraValue })
 }
 
 export function * availableAddresses(): IterableIterator<number> {
-  for (let i = 1; i < 20; i++) yield i 
-  for (let i = 100; i < 110; i++) yield i 
+  for (let i = 1; i < 20; i++) yield i
+  for (let i = 100; i < 110; i++) yield i
 }
 
 export async function findOnline(): Promise<Slave[]> {
@@ -161,10 +158,9 @@ export async function findOnline(): Promise<Slave[]> {
   for (const address of availableAddresses()) {
     try {
       const response = await get(address, Param.UID)
-      const slave = new Slave(address, response.value)      
+      const slave = new Slave(address, response.value)
       output.push(slave)
     } catch (e) {}
   }
   return output
 }
-
