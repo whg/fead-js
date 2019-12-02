@@ -58,7 +58,7 @@ export function unpack(response: packet): Response {
   const [address, param, ...values] = response
     .substr(1)
     .split(SEPARATOR)
-    .map(p => parseInt(p))
+    .map(p => parseFloat(p))
 
   const output: Response = {
     address,
