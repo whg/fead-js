@@ -7,7 +7,7 @@
     "outDir": "./lib",
     "rootDir": "./src",
     "strict": true,
-    // "types": ["jest"],
+    "types": ["jest"],
     "esModuleInterop": true,
   },
   "exclude": [
