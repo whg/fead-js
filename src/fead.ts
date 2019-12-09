@@ -83,7 +83,12 @@ export function writeAndWait(req: Request, timeout = 12): Promise<Response> {
     const _timeout = setTimeout(reject, timeout)
     serial.setReceivedCallback((packet: packet) => {
       clearTimeout(_timeout)
-      resolve(unpack(packet))
+      const response = unpack(packet)
+      if (response.param === req.param && response.address === req.address) {
+        resolve(response)
+      } else {
+        reject()
+      }
     })
   })
 }
