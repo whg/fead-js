@@ -1,6 +1,6 @@
 import SerialPort from 'serialport'
-const Readline = require('@serialport/parser-readline')
 
+const { Readline } = SerialPort.parsers
 let port: SerialPort
 let parser
 type receiverFunc = ((line: string) => void) | null
@@ -16,7 +16,7 @@ export async function open(device: { path: string, baudRate: number }): Promise<
       if (error) {
         reject(new Error(`can't connect to ${path}`))
       } else {
-        parser = new Readline()
+        parser = new Readline({ delimiter: '\n' })
         port.pipe(parser)
         parser.on('data', (line: string) => {
           if(receiver) {
