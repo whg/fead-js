@@ -1,6 +1,7 @@
 import EventEmitter from 'events'
 import * as serial from './serial'
 import { Slave } from './Slave'
+import { NoResponseError } from './errors'
 
 const SEPARATOR = ':'
 
@@ -126,7 +127,7 @@ export async function send(request: Request, maxAttempts = 2, timeout = 50): Pro
   }
 
   finish()
-  throw new Error('no response')
+  throw new NoResponseError(`tried ${maxAttempts} and no response`)
 }
 
 export function get(address: number, param: param, extraValue?: number): Promise<Response> {
