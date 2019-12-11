@@ -8,19 +8,20 @@ const broadcastAddress = 0
 
 export type packet = string
 export type param = number
+type method = string
 
 export const Param = {
   ADDRESS: 254,
   UID: 255
 }
 
-export const enum Method {
-  GET = 'g',
-  SET = 's'
+export const Method = {
+  GET: 'g',
+  SET: 's'
 }
 
 export type Request = {
-  method: Method;
+  method: method;
   param: param;
   address?: number;
   value?: number;
@@ -101,7 +102,7 @@ function requestComplete(nextRequestDelay = 2): Promise<void> {
   })
 }
 
-export async function send(request: Request, maxAttempts = 2, timeout = 12): Promise<Response> {
+export async function send(request: Request, maxAttempts = 2, timeout = 50): Promise<Response> {
   requestQueue.push(request)
 
   while (requestQueue[0] !== request) {
@@ -113,8 +114,8 @@ export async function send(request: Request, maxAttempts = 2, timeout = 12): Pro
     eventEmitter.emit('response', request)
   }
 
-  let attempts = 0
-  while (attempts < maxAttempts) {
+  let attempts = 1
+  while (attempts <= maxAttempts) {
     try {
       const response = await writeAndWait(request, timeout)
       finish()
@@ -136,12 +137,20 @@ export function set(address: number, param: param, value: number, extraValue?: n
   return send({ method: Method.SET, address, param, value, extraValue })
 }
 
-export function broadcast(req: Request, callback: (res: Response) => void): void {
+export async function broadcast(req: Request, callback: (res: Response) => void): Promise<void> {
+  while (requestQueue.length > 0) {
+    await requestComplete()
+  }
+
   req.address = broadcastAddress
   serial.setUnsolicitedReceiverCallback((line: packet) => {
     callback(unpack(line))
   })
   write(req)
+
+  return new Promise((resolve) => {
+    setTimeout(resolve, 200)
+  })
 }
 
 export function * availableAddresses(): IterableIterator<number> {
@@ -153,7 +162,12 @@ export async function findOnline(): Promise<Slave[]> {
   const output: Slave[] = []
   for (const address of availableAddresses()) {
     try {
-      const response = await get(address, Param.UID)
+      const response = await send({
+        method: Method.GET,
+        address,
+        param: Param.UID
+      }, 1)
+
       const slave = new Slave(address, response.value)
       output.push(slave)
     } catch (e) {}
