@@ -19,6 +19,7 @@ export async function open(device: { path: string, baudRate: number }): Promise<
         parser = new Readline({ delimiter: '\n' })
         port.pipe(parser)
         parser.on('data', (line: string) => {
+          console.log(line.toUpperCase())
           if(receiver) {
             receiver(line)
             receiver = null
@@ -33,6 +34,7 @@ export async function open(device: { path: string, baudRate: number }): Promise<
 }
 
 export function write(data: string): void {
+  console.log(data.trim())
   port.write(data, 'ascii')
 }
 

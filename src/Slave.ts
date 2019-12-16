@@ -9,13 +9,15 @@ export class Slave {
     return new Promise((resolve) => {
       if (online(this)) {
         resolve(true)
-      } else {
+      } else if (this.address) {
         fead.get(this.address, fead.Param.UID)
           .then((response) => {
             this.uid = response.value
             resolve(true)
           })
           .catch(() => resolve(false))
+      } else {
+        resolve(false)
       }
     })
   }

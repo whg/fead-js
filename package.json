@@ -1,12 +1,11 @@
 {
   "name": "fead",
   "version": "1.0.2",
-  "description": "A libraries to use with fead devices",
+  "description": "A library to use with fead devices",
   "type": "module",
   "repository": "https://github.com/whg/fead-js",
   "author": "Will Gallia <will@stillatplay.com>",
   "license": "MIT",
-  "private": true,
   "files": [
     "lib"
   ],
