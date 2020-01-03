@@ -1,5 +1,5 @@
 export * from './fead'
 export { Vocab, fromHeader as vocabFromHeader } from './vocab'
-export { setUnsolicitedReceiverCallback } from './serial'
+export { setUnsolicitedReceiverCallback, useLogger } from './serial'
 export { Slave, online } from './Slave'
 export { NoResponseError } from './errors'

@@ -6,6 +6,7 @@ let parser
 type receiverFunc = ((line: string) => void) | null
 let receiver: receiverFunc = null
 let unsolicitedReceiver: receiverFunc = null
+let logger: any = null
 
 export async function open(device: { path: string, baudRate: number }): Promise<void> {
   const { path, baudRate } = device
@@ -19,7 +20,9 @@ export async function open(device: { path: string, baudRate: number }): Promise<
         parser = new Readline({ delimiter: '\n' })
         port.pipe(parser)
         parser.on('data', (line: string) => {
-          console.log(line.toUpperCase())
+          if (logger) {
+            logger.debug(line.toUpperCase())
+          }
           if(receiver) {
             receiver(line)
             receiver = null
@@ -34,7 +37,9 @@ export async function open(device: { path: string, baudRate: number }): Promise<
 }
 
 export function write(data: string): void {
-  console.log(data.trim())
+  if (logger) {
+    logger.debug(data.trim())
+  }
   port.write(data, 'ascii')
 }
 
@@ -44,4 +49,8 @@ export function setReceivedCallback(f: receiverFunc): void {
 
 export function setUnsolicitedReceiverCallback(f: receiverFunc): void {
   unsolicitedReceiver = f
+}
+
+export function useLogger(l: any): void {
+  logger = l
 }
