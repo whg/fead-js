@@ -103,7 +103,7 @@ function requestComplete(nextRequestDelay = 2): Promise<void> {
   })
 }
 
-export async function send(request: Request, maxAttempts = 2, timeout = 50): Promise<Response> {
+export async function send(request: Request, maxAttempts = 3, timeout = 50): Promise<Response> {
   requestQueue.push(request)
 
   while (requestQueue[0] !== request) {
@@ -152,6 +152,10 @@ export async function broadcast(req: Request, callback: (res: Response) => void)
   return new Promise((resolve) => {
     setTimeout(resolve, 200)
   })
+}
+
+export function power(on = true) {
+  serial.write(`p${on ? 1: 0}\n`)
 }
 
 export function * availableAddresses(): IterableIterator<number> {
