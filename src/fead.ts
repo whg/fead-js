@@ -103,7 +103,7 @@ function requestComplete(nextRequestDelay = 2): Promise<void> {
   })
 }
 
-export async function send(request: Request, maxAttempts = 3, timeout = 50): Promise<Response> {
+export async function send(request: Request, maxAttempts = 3, timeout = 30): Promise<Response> {
   requestQueue.push(request)
 
   while (requestQueue[0] !== request) {
@@ -144,13 +144,16 @@ export async function broadcast(req: Request, callback: (res: Response) => void)
   }
 
   req.address = broadcastAddress
-  serial.setUnsolicitedReceiverCallback((line: packet) => {
+  serial.pushUnsolicitedReceiverCallback((line: packet) => {
     callback(unpack(line))
   })
   write(req)
 
   return new Promise((resolve) => {
-    setTimeout(resolve, 200)
+    setTimeout(() => {
+      serial.popUnsolicitedReceiverCallback()
+      resolve()
+    }, 200)
   })
 }
 

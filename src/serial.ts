@@ -3,9 +3,9 @@ import SerialPort from 'serialport'
 const { Readline } = SerialPort.parsers
 let port: SerialPort
 let parser
-type receiverFunc = ((line: string) => void) | null
-let receiver: receiverFunc = null
-let unsolicitedReceiver: receiverFunc = null
+type receiverFunc = ((line: string) => void)
+let receiver: receiverFunc | null = null
+let unsolicitedReceivers: receiverFunc[] = []
 let logger: any = null
 
 export async function open(device: { path: string, baudRate: number }): Promise<void> {
@@ -21,13 +21,13 @@ export async function open(device: { path: string, baudRate: number }): Promise<
         port.pipe(parser)
         parser.on('data', (line: string) => {
           if (logger) {
-            logger.debug(line.toUpperCase())
+            logger.silly(line.toUpperCase())
           }
           if(receiver) {
             receiver(line)
             receiver = null
-          } else if (unsolicitedReceiver) {
-            unsolicitedReceiver(line)
+          } else if (unsolicitedReceivers.length > 0) {
+            unsolicitedReceivers.forEach((func: receiverFunc) => func(line))
           }
         })
         resolve()
@@ -38,7 +38,7 @@ export async function open(device: { path: string, baudRate: number }): Promise<
 
 export function write(data: string): void {
   if (logger) {
-    logger.debug(data.trim())
+    logger.silly(data.trim())
   }
   port.write(data, 'ascii')
 }
@@ -47,8 +47,12 @@ export function setReceivedCallback(f: receiverFunc): void {
   receiver = f
 }
 
-export function setUnsolicitedReceiverCallback(f: receiverFunc): void {
-  unsolicitedReceiver = f
+export function pushUnsolicitedReceiverCallback(f: receiverFunc): void {
+  unsolicitedReceivers.push(f)
+}
+
+export function popUnsolicitedReceiverCallback(): void {
+  unsolicitedReceivers.pop()
 }
 
 export function useLogger(l: any): void {
