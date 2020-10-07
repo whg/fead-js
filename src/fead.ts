@@ -153,7 +153,7 @@ export async function broadcast(req: Request, callback: (res: Response) => void)
     setTimeout(() => {
       serial.popUnsolicitedReceiverCallback()
       resolve()
-    }, 200)
+    }, 500)
   })
 }
 

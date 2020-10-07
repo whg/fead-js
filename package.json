@@ -31,8 +31,7 @@
     "serialport": "^8.0.5"
   },
   "scripts": {
-    "dev": "tsc-watch --noClear",
-    "start": "node ./dist/index.js",
+    "dev": "tsc --watch",
     "test": "jest --verbose"
   }
 }
