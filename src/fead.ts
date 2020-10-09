@@ -161,24 +161,14 @@ export function power(on = true) {
   serial.write(`p${on ? 1: 0}\n`)
 }
 
-export function * availableAddresses(): IterableIterator<number> {
-  for (let i = 1; i < 20; i++) yield i
-  for (let i = 100; i < 110; i++) yield i
-}
-
 export async function findOnline(): Promise<Slave[]> {
   const output: Slave[] = []
-  for (const address of availableAddresses()) {
-    try {
-      const response = await send({
-        method: Method.GET,
-        address,
-        param: Param.UID
-      }, 1)
-
-      const slave = new Slave(address, response.value)
-      output.push(slave)
-    } catch (e) {}
-  }
+  await broadcast({
+    method: Method.GET,
+    param: Param.UID
+  }, (response: Response) => {
+    const { address, value } = response
+    output.push(new Slave(address, value))
+  })
   return output
 }
