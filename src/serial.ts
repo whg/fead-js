@@ -38,10 +38,13 @@ export async function open(device: { path: string, baudRate: number }): Promise<
 }
 
 export function write(data: string): void {
-  if (logger) {
-    logger.silly(data.trim())
+  if (port) {
+    if (logger) {
+      logger.silly(data.trim())
+    }
+    port.write(data, 'ascii')
+    port.drain()
   }
-  port && port.write(data, 'ascii')
 }
 
 export function setReceivedCallback(f: receiverFunc): void {
