@@ -1,8 +1,8 @@
 import * as fead from './fead'
 
-export const online = (slave: Slave): boolean => slave.uid !== undefined
+export const online = (slave: Client): boolean => slave.uid !== undefined
 
-export class Slave {
+export class Client {
   constructor(public address: number, public uid?: number) {}
 
   isOnline(): Promise<boolean> {

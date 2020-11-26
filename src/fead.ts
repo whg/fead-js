@@ -1,6 +1,6 @@
 import EventEmitter from 'events'
 import * as serial from './serial'
-import { Slave } from './Slave'
+import { Client } from './Client'
 import { NoResponseError } from './errors'
 
 const SEPARATOR = ':'
@@ -166,14 +166,14 @@ export function power(on = true) {
   serial.write(`p${on ? 1 : 0}\n`)
 }
 
-async function broadcastGet(param: param): Promise<Slave[]> {
-  const output: Slave[] = []
+async function broadcastGet(param: param): Promise<Client[]> {
+  const output: Client[] = []
   await broadcast({
     method: Method.GET,
     param,
   }, (response: Response) => {
     const { address, value } = response
-    output.push(new Slave(address, value))
+    output.push(new Client(address, value))
   })
   return output
 }
