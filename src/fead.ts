@@ -12,8 +12,9 @@ export type param = number
 type method = string
 
 export const Param = {
+  UID: 255,
   ADDRESS: 254,
-  UID: 255
+  DISCOVER: 253
 }
 
 export const Method = {
@@ -138,7 +139,7 @@ export function set(address: number, param: param, value: number, extraValue?: n
   return send({ method: Method.SET, address, param, value, extraValue })
 }
 
-export async function broadcast(request: Request, callback: (res: Response) => void): Promise<void> {
+export async function broadcast(request: Request, callback: (res: Response) => void, timeout = 500): Promise<void> {
   requestQueue.push(request)
 
   while (requestQueue[0] !== request) {
@@ -157,22 +158,25 @@ export async function broadcast(request: Request, callback: (res: Response) => v
       requestQueue.shift()
       eventEmitter.emit('response', request)
       resolve()
-    }, 500)
+    }, timeout)
   })
 }
 
 export function power(on = true) {
-  serial.write(`p${on ? 1: 0}\n`)
+  serial.write(`p${on ? 1 : 0}\n`)
 }
 
-export async function findOnline(): Promise<Slave[]> {
+async function broadcastGet(param: param): Promise<Slave[]> {
   const output: Slave[] = []
   await broadcast({
     method: Method.GET,
-    param: Param.UID
+    param,
   }, (response: Response) => {
     const { address, value } = response
     output.push(new Slave(address, value))
   })
   return output
 }
+
+export const findOnline = () => broadcastGet(Param.ADDRESS)
+export const discover = () => broadcastGet(Param.DISCOVER)
