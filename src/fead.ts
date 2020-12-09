@@ -121,6 +121,7 @@ export async function send(request: Request, maxAttempts = 3, timeout = 100): Pr
     try {
       const response = await writeAndWait(request, timeout)
       finish()
+      await new Promise((res) => setTimeout(res, 10))
       return response
     } catch (e) {
       attempts++
