@@ -1,4 +1,5 @@
 import EventEmitter from 'events'
+import { Gpio } from 'onoff'
 import * as serial from './serial'
 import { Client } from './Client'
 import { NoResponseError } from './errors'
@@ -10,6 +11,11 @@ const broadcastAddress = 0
 export type packet = string
 export type param = number
 type method = string
+
+let piPowerPin: null | Gpio = null
+try {
+  piPowerPin = new Gpio(10, 'out')
+} catch (e) {}
 
 export const Param = {
   UID: 255,
@@ -164,7 +170,11 @@ export async function broadcast(request: Request, callback: (res: Response) => v
 }
 
 export function power(on = true) {
-  serial.write(`p${on ? 1 : 0}\n`)
+  const v = on ? 1 : 0
+  serial.write(`p${v}\n`)
+  if (piPowerPin) {
+    piPowerPin.write(v)
+  }
 }
 
 async function broadcastGet(param: param): Promise<Client[]> {
