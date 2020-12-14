@@ -88,8 +88,6 @@ export function write(req: Request): void {
 
 export function writeAndWait(req: Request, timeout = 12): Promise<Response> {
   return new Promise((resolve: (r: Response) => void, reject: () => void) => {
-    write(req)
-    const _timeout = setTimeout(reject, timeout)
     serial.setReceivedCallback((packet: packet) => {
       clearTimeout(_timeout)
       const response = unpack(packet)
@@ -99,6 +97,8 @@ export function writeAndWait(req: Request, timeout = 12): Promise<Response> {
         reject()
       }
     })
+    write(req)
+    const _timeout = setTimeout(reject, timeout)
   })
 }
 
@@ -175,6 +175,16 @@ export function power(on = true) {
   if (piPowerPin) {
     piPowerPin.write(v)
   }
+}
+
+export async function connected(): Promise<boolean> {
+  let alive = false
+  serial.setReceivedCallback(() => {
+    alive = true
+  })
+  serial.write('q\n')
+  await new Promise(resolve => setTimeout(resolve, 20))
+  return alive
 }
 
 async function broadcastGet(param: param): Promise<Client[]> {
