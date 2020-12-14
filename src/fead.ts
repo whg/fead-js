@@ -182,7 +182,7 @@ export async function connected(): Promise<boolean> {
   serial.setReceivedCallback(() => {
     alive = true
   })
-  serial.write('q\n')
+  serial.write('v\n')
   await new Promise(resolve => setTimeout(resolve, 20))
   return alive
 }
