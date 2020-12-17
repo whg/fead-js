@@ -127,7 +127,7 @@ export async function send(request: Request, maxAttempts = 3, timeout = 100): Pr
     try {
       const response = await writeAndWait(request, timeout)
       finish()
-      await new Promise((res) => setTimeout(res, 10))
+      await new Promise((res) => setTimeout(res, 5))
       return response
     } catch (e) {
       attempts++
@@ -169,22 +169,24 @@ export async function broadcast(request: Request, callback: (res: Response) => v
   })
 }
 
+async function writeAndExpectReply(line: string, timeout = 20): Promise<boolean> {
+  let replied = false
+  serial.setReceivedCallback(() => replied = true)
+  serial.write(line)
+  await new Promise(resolve => setTimeout(resolve, timeout))
+  return replied
+}
+
 export function power(on = true) {
   const v = on ? 1 : 0
-  serial.write(`p${v}\n`)
   if (piPowerPin) {
     piPowerPin.write(v)
   }
+  return writeAndExpectReply(`p${v}\n`)
 }
 
-export async function connected(): Promise<boolean> {
-  let alive = false
-  serial.setReceivedCallback(() => {
-    alive = true
-  })
-  serial.write('v\n')
-  await new Promise(resolve => setTimeout(resolve, 20))
-  return alive
+export async function version(): Promise<boolean> {
+  return writeAndExpectReply('v\n')
 }
 
 async function broadcastGet(param: param): Promise<Client[]> {
