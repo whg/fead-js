@@ -21,7 +21,7 @@ export async function open(device: { path: string, baudRate: number }): Promise<
         port.pipe(parser)
         parser.on('data', (line: string) => {
           if (logger) {
-            logger.silly(line.toUpperCase())
+            logger.debug(line.toUpperCase())
           }
           if(receiver) {
             receiver(line)
@@ -40,7 +40,7 @@ export async function open(device: { path: string, baudRate: number }): Promise<
 export function write(data: string): void {
   if (port) {
     if (logger) {
-      logger.silly(data.trim())
+      logger.debug(data.trim())
     }
     port.write(data, 'ascii')
     port.drain()
