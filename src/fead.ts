@@ -110,7 +110,7 @@ function requestComplete(nextRequestDelay = 20): Promise<void> {
   })
 }
 
-export async function send(request: Request, maxAttempts = 3, timeout = 100): Promise<Response> {
+export async function send(request: Request, maxAttempts = 3, timeout = 250): Promise<Response> {
   requestQueue.push(request)
 
   while (requestQueue[0] !== request) {
