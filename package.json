@@ -1,6 +1,6 @@
 {
   "name": "fead",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "description": "A library to use with fead devices",
   "repository": "https://github.com/whg/fead-js",
   "author": "Will Gallia <will@stillatplay.com>",
