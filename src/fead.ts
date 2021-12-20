@@ -3,6 +3,7 @@ import { Gpio } from 'onoff'
 import * as serial from './serial'
 import { Client } from './Client'
 import { NoResponseError } from './errors'
+import { flash } from './flash'
 
 const SEPARATOR = ':'
 
@@ -20,7 +21,9 @@ try {
 export const Param = {
   UID: 255,
   ADDRESS: 254,
-  DISCOVER: 253
+  DISCOVER: 253,
+  VERSION: 252,
+  RESET: 251
 }
 
 export const Method = {
@@ -88,6 +91,10 @@ export function write(req: Request): void {
 
 export function writeAndWait(req: Request, timeout = 12): Promise<Response> {
   return new Promise((resolve: (r: Response) => void, reject: () => void) => {
+	const _timeout = setTimeout(() => {
+	  setTimeout(reject, 100)
+	}, timeout)
+
     serial.setReceivedCallback((packet: packet) => {
       clearTimeout(_timeout)
       const response = unpack(packet)
@@ -98,7 +105,6 @@ export function writeAndWait(req: Request, timeout = 12): Promise<Response> {
       }
     })
     write(req)
-    const _timeout = setTimeout(reject, timeout)
   })
 }
 
@@ -125,7 +131,7 @@ export async function send(request: Request, maxAttempts = 3, timeout = 250): Pr
   let attempts = 1
   while (attempts <= maxAttempts) {
     try {
-      const response = await writeAndWait(request, timeout)
+      const response = await writeAndWait(request, timeout * attempts)
       finish()
       await new Promise((res) => setTimeout(res, 5))
       return response
@@ -203,3 +209,17 @@ async function broadcastGet(param: param): Promise<Client[]> {
 
 export const findOnline = () => broadcastGet(Param.ADDRESS)
 export const discover = () => broadcastGet(Param.DISCOVER)
+
+export async function resetGroup(group: number): Promise<void> {
+  return broadcast({
+    method: Method.SET,
+    param: Param.RESET,
+    value: group
+  }, () => {})
+}
+
+export async function flashGroup(group: number, binaryFilepath: string): Promise<void> {
+  await resetGroup(group)
+  await new Promise(resolve => setTimeout(resolve, 100))
+  await flash(binaryFilepath)
+}
